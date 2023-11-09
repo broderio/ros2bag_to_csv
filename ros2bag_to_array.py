@@ -29,7 +29,8 @@ def bag_to_array(bagfile):
 
 def main():
     messages = bag_to_array('/root/path03-2/')
-    print(messages[0])
+    print(type(messages[0]))
+    print(messages[0].header)
     print(messages[0].latitude)
     print(messages[0].longitude)
     print(messages[0].altitude)
