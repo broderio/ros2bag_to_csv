@@ -17,17 +17,21 @@ def bag_to_array(bagfile):
     # Create a dictionary mapping topic names to types
     topic_types = {topic_metadata.name: topic_metadata.type for topic_metadata in topics_and_types}
 
-    data = []
+    output_data = []
     while reader.has_next():
         (topic, data, t) = reader.read_next()
         msg_type = topic_types[topic]
         msg = deserialize_message(data, get_message(msg_type))
-        print(msg)
+        # print(msg)
+        output_data.append(msg)
 
-    return data
+    return output_data
 
 def main():
-    bag_to_array('/root/path03-2/')
+    messages = bag_to_array('/root/path03-2/')
+    print(messages[0].latitude)
+    print(messages[0].longitude)
+    print(messages[0].altitude)
 
 if __name__ == '__main__':
     main()
