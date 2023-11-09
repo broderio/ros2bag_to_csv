@@ -1,9 +1,10 @@
+import csv
 import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
-from std_msgs.msg import String
+from sensor_msgs.msg import NavSatFix
 
-def bag_to_array(bagfile):
+def bag_to_csv(bagfile, csvfile):
     reader = rosbag2_py.SequentialReader()
 
     storage_options = rosbag2_py.StorageOptions(uri=bagfile, storage_id="sqlite3")
@@ -17,23 +18,18 @@ def bag_to_array(bagfile):
     # Create a dictionary mapping topic names to types
     topic_types = {topic_metadata.name: topic_metadata.type for topic_metadata in topics_and_types}
 
-    output_data = []
-    while reader.has_next():
-        (topic, data, t) = reader.read_next()
-        msg_type = topic_types[topic]
-        msg = deserialize_message(data, get_message(msg_type))
-        # print(msg)
-        output_data.append(msg)
-
-    return output_data
+    with open(csvfile, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["stamp", "topic", "latitude", "longitude", "altitude"])  # write the header row
+        while reader.has_next():
+            (topic, data, t) = reader.read_next()
+            msg_type = topic_types[topic]
+            msg = deserialize_message(data, get_message(msg_type))
+            stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+            writer.writerow([stamp, topic, msg.latitude, msg.longitude, msg.altitude])
 
 def main():
-    messages = bag_to_array('/root/path03-2/')
-    print(type(messages[0]))
-    print(messages[0].header)
-    print(messages[0].latitude)
-    print(messages[0].longitude)
-    print(messages[0].altitude)
+    bag_to_csv('/root/path03-2/', 'output.csv')
 
 if __name__ == '__main__':
     main()
