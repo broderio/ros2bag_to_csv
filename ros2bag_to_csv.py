@@ -1,3 +1,4 @@
+import argparse
 import csv
 import rosbag2_py
 from rclpy.serialization import deserialize_message
@@ -51,6 +52,11 @@ def bag_to_csv(bagfile, output_dir):
         file.close()
 
 def main():
+    parser = argparse.ArgumentParser(description='Convert a ROS bag file to CSV.')
+    parser.add_argument('bagfile', help='The path to the input bag file.')
+    parser.add_argument('output_dir', help='The directory to write the output CSV files to.')
+    args = parser.parse_args()
+    
     bag_to_csv('/root/path03-2/', '/root/ros2bag_to_array/output/')
 
 if __name__ == '__main__':
