@@ -1,29 +1,8 @@
-# function [x2 y2 b2] = XYfromGPS(lat1, long1, lat2, long2)
-# % url: https://ccv.eng.wayne.edu/m_script.html
-# % converts GPS coordinates into cartesian coordinate system
-# % such that XY plane is tangent to P1 and Y points to the NORTH and
-# % X points to the EAST and assuming P1 is at the origin (x1,y1)=(0,0)
-# % North
-# %   ^
-# %   |
-# %   Y
-# %   |
-# %  0,0---X--->East
-# % inputs lat1, long1, lat2, long2
-# % output x2 y2 b2-heading
-#   R=6.371*10^6; %earth radius
-#   lat1_=lat1*pi/180; %convert degrees into radians
-#   lat2_=lat2*pi/180;
-#   long1_=long1*pi/180;
-#   long2_=long2*pi/180;
-
-#   y2 = R*(lat2_-lat1_);
-#   x2 = R*(long2_-long1_).*cos(lat1_);
-#   b2 = atan2(x2,y2)*180/pi+180;
-#   %b2 = atan2(x2,y2)*180/pi;
-# end
-
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from matplotlib.patches import Rectangle
+import pdb
 
 def XYfromGPS(lat1, long1, lat2, long2):
   R = 6.371*10^6 # earth radius
@@ -50,35 +29,32 @@ FOH = 1.00
 W = 2.850
 L = 4.930
 
-
 # GPS Ref point data into Boundary Points 1-4
 
-# GPS-based boundary points:
+# Center-based boundary points:
 # Basic Position: GPS Reference Point at (0,0), Heading at 0 deg
 # boundary_points_basic - calculate center point
-center_x = [L/2, -L/2, -L/2, L/2]
-center_y = [-W/2, -W/2, W/2, W/2]
+basic_x = [L/2, -L/2, -L/2, L/2]
+basic_y = [-W/2, -W/2, W/2, W/2]
 
-Rotated_vehicle_boundary_x = center_x * np.cos(Hdg) - center_y*np.sin(Hdg)
-Rotated_vehicle_boundary_y = center_x *np.sin(Hdg) + center_y*np.cos(Hdg)
+Rotated_vehicle_boundary_x = basic_x * np.cos(Hdg) - basic_y*np.sin(Hdg)
+Rotated_vehicle_boundary_y = basic_x *np.sin(Hdg) + basic_y*np.cos(Hdg)
 
 Final_vehicle_boundary_center_x = center_x + Rotated_vehicle_boundary_x
 Final_vehicle_boundary_center_y = center_y + Rotated_vehicle_boundary_y
 
-
+# GPS-based boundary points:
 basic_x = [L-ROH, -ROH, -ROH, L-ROH]
 basic_y = [-W/2, -W/2 ,  W/2 , W/2]
 
 Rotated_vehicle_boundary_x = basic_x * np.cos(Hdg) - basic_y*np.sin(Hdg)
 Rotated_vehicle_boundary_y = basic_x *np.sin(Hdg) + basic_y*np.cos(Hdg)
 
-Final_vehicle_boundary_GPS_x = basic_x + Rotated_vehicle_boundary_x
-Final_vehicle_boundary_GPS_y = basic_y + Rotated_vehicle_boundary_y
+Final_vehicle_boundary_GPS_x = GPS_x + Rotated_vehicle_boundary_x
+Final_vehicle_boundary_GPS_y = GPS_y + Rotated_vehicle_boundary_y
 
 # animate box using  trigonometric translation and rotation of the 4 corners of the box relative to the (assumed) GPS Reference point
-
 # [ Final_vehicle_boundary_GPS_x, Final_vehicle_boundary_GPS_y ]
-
 Point1_x = Final_vehicle_boundary_GPS_x + (L - ROH)
 Point1_y = Final_vehicle_boundary_GPS_y - (W / 2)
 
@@ -90,11 +66,6 @@ Point3_y = Final_vehicle_boundary_GPS_y + (W / 2)
 
 Point4_x = Final_vehicle_boundary_GPS_x + (L - ROH)
 Point4_y = Final_vehicle_boundary_GPS_y + (W / 2)
-
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.patches import Rectangle
-import pdb
 
 coordinates_list = [
     [(0, 0), (1, 0), (1, 1), (0, 1)],
