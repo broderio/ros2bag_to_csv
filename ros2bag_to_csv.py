@@ -3,6 +3,7 @@ import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
 
+# Recursively extract all fields from a ROS message
 def extract_fields(msg, prefix=''):
     fields = {}
     for attr in dir(msg):
