@@ -11,6 +11,12 @@ import pdb
 MCITY_LAT = 42.298977
 MCITY_LON = -83.699394
 
+# measurements (m) taken on 2015 lincoln mkz
+ROH = 1.08
+FOH = 1.00
+W = 2.850
+L = 4.930
+
 # convert from lat/lon to UTM
 def latlon_to_utm(lat, lon):
    utm_project = Proj(proj='utm', zone=17, ellps='WGS84')
@@ -37,8 +43,30 @@ def translate_data(filename):
 
 def update(frame, x, y):
     plt.clf()
-    print(x[:frame+1], y[:frame+1])
-    plt.plot(x[:frame+1], y[:frame+1], marker='o')
+
+    # plot all points
+    # rtk_x = x[:frame+1]
+    # rtk_y = y[:frame+1]
+
+    # only plot current frame
+    rtk_x = x[frame]
+    rtk_y = y[frame]
+
+    # calculate points based on slides & lincoln mkz measurements
+    x1 = rtk_x + (L - ROH)
+    y1 = rtk_y - (W / 2)
+
+    x2 = rtk_x - ROH
+    y2 = rtk_y - (W / 2)
+
+    x3 = rtk_x - ROH
+    y3 = rtk_y + (W / 2)
+
+    x4 = rtk_x + (L - ROH)
+    y4 = rtk_y + (W / 2)
+    
+    # plt.plot(x[:frame+1], y[:frame+1], marker='o')
+    plt.plot([x1, x2, x3, x4, x1], [y1, y2, y3, y4, y1], color='red')
     plt.xlim(min(x) - 5, max(x) + 5)
     plt.ylim(min(y) - 5, max(y) + 5)
     plt.title(f"Frame {frame}", fontsize=8)
