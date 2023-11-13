@@ -65,7 +65,7 @@ def update(frame, x, y):
     x4 = rtk_x + (L - ROH)
     y4 = rtk_y + (W / 2)
     
-    # plt.plot(x[:frame+1], y[:frame+1], marker='o')
+    plt.plot(x[:frame+1], y[:frame+1], marker='o', markersize=3, linestyle = '')
     plt.plot([x1, x2, x3, x4, x1], [y1, y2, y3, y4, y1], color='red')
     plt.xlim(min(x) - 5, max(x) + 5)
     plt.ylim(min(y) - 5, max(y) + 5)
