@@ -1,5 +1,6 @@
 import argparse
 import csv
+import os
 import rosbag2_py
 from rclpy.serialization import deserialize_message
 from rosidl_runtime_py.utilities import get_message
@@ -32,8 +33,11 @@ def bag_to_csv(bagfile, output_dir):
 
     # Create a CSV writer for each type
     writers = {}
+    bag_name = os.path.basename(os.path.normpath(bagfile))
     for topic, msg_type in topic_types.items():
-        csvfile = f"{output_dir}/{topic.replace('/', '_')}.csv"
+        if 'gps_msgs' in msg_type:
+            msg_type = 'sensor_msgs/msg/NavSatFix'
+        csvfile = f"{output_dir}/{bag_name}{topic.replace('/', '_')}.csv"
         file = open(csvfile, 'w', newline='')
         writer = csv.writer(file)
         writer.writerow(["stamp", "topic"] + sorted(extract_fields(get_message(msg_type)())))
@@ -42,6 +46,8 @@ def bag_to_csv(bagfile, output_dir):
     while reader.has_next():
         (topic, data, t) = reader.read_next()
         msg_type = topic_types[topic]
+        if 'gps_msgs' in msg_type:
+            msg_type = 'sensor_msgs/msg/NavSatFix'
         msg = deserialize_message(data, get_message(msg_type))
         stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         fields = extract_fields(msg)
@@ -57,7 +63,7 @@ def main():
     parser.add_argument('output_dir', help='The directory to write the output CSV files to.')
     args = parser.parse_args()
     
-    bag_to_csv('/root/path03-2/', '/root/ros2bag_to_array/output/')
+    bag_to_csv(args.bagfile, args.output_dir)
 
 if __name__ == '__main__':
     main()
