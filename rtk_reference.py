@@ -4,7 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib.patches import Rectangle
+from helper import latlon_to_utm, convert_string_to_arr, extract_latitude, extract_longitude
 import pdb
+import ast
 
 # local 'zero' point in lat/lon (mcity garage)
 # utm zone (ann arbor) = 17
@@ -17,15 +19,69 @@ FOH = 1.00
 W = 2.850
 L = 4.930
 
-# convert from lat/lon to UTM
-def latlon_to_utm(lat, lon):
-   utm_project = Proj(proj='utm', zone=17, ellps='WGS84')
-   utm_x, utm_y = utm_project(lon, lat)
+# # convert from lat/lon to UTM
+# def latlon_to_utm(lat, lon):
+#    if lat is not np.nan and lon is not np.nan:
+#     utm_project = Proj(proj='utm', zone=17, ellps='WGS84')
+#     utm_x, utm_y = utm_project(lon, lat)
 
-   return utm_x, utm_y
+#     return utm_x, utm_y
+#    return np.nan, np.nan
 
-def translate_data(filename):
-    data = pd.read_csv(filename)
+# def convert_string_to_arr(s):
+#     # Remove leading '[' and trailing ']' from the string
+#     if isinstance(s, str):
+#         s = s.strip('[').strip(']')
+#         num_strings = s.split()
+#         num_arr = [float(num) for num in num_strings]
+#         return num_arr
+#     else:
+#         return None
+
+# def extract_latitude(arr):
+#     # Check if the input is a list
+#     if isinstance(arr, (list, np.ndarray)):
+#         return arr[3]
+#     else:
+#         return np.nan
+
+# def extract_longitude(arr):
+#     # Check if the input is a list 
+#     if isinstance(arr, (list, np.ndarray)):
+#         return arr[4]
+#     else:
+#         return np.nan
+
+def translate_gps_heading_data(filename1, filename2):
+    data1 = pd.read_csv(filename1)
+    data2 = pd.read_csv(filename2)
+    data = pd.merge(data2, data1, on='stamp', how='inner')
+
+    print(data.head())
+
+    # Convert string representations of NumPy arrays to actual NumPy arrays
+    data['position_covariance'] = data['position_covariance'].apply(convert_string_to_arr)
+    data['latitude'] = data['position_covariance'].apply(extract_latitude)
+    data['longitude'] = data['position_covariance'].apply(extract_longitude)
+
+    print(data['latitude'], data['longitude'])
+
+    utm_mcity_x, utm_mcity_y = latlon_to_utm(MCITY_LAT, MCITY_LON)
+
+    # convert gps to utm 
+    data['utm_x'], data['utm_y'] = zip(*data.apply(lambda row: latlon_to_utm(row['latitude'], row['longitude']), axis=1))
+
+    # translate data using reference point
+    utm_col_x = data['utm_x'] - utm_mcity_x
+    utm_col_y = data['utm_y'] - utm_mcity_y
+
+    print(f"Vehicle data UTM X: {data['utm_x'][0]}, UTM Y: {data['utm_y'][0]}")
+
+def translate_gps_data(filename1):
+    data = pd.read_csv(filename1)
+
+    print(data.head())
+    
     utm_mcity_x, utm_mcity_y = latlon_to_utm(MCITY_LAT, MCITY_LON)
 
     # convert gps to utm 
@@ -64,6 +120,10 @@ def update(frame, x, y):
 
     x4 = rtk_x + (L - ROH)
     y4 = rtk_y + (W / 2)
+
+    # orient car orientation
+
+    # plot starting position of the car to compare to end position
     
     plt.plot(x[:frame+1], y[:frame+1], marker='o', markersize=3, linestyle = '')
     plt.plot([x1, x2, x3, x4, x1], [y1, y2, y3, y4, y1], color='red')
@@ -83,24 +143,25 @@ def plot_coordinates(x, y):
     plt.show()
     
 def main():
-    utm_x, utm_y = latlon_to_utm(MCITY_LAT, MCITY_LON)
-    print(f"MCITY GARAGE UTM X: {utm_x}, UTM Y: {utm_y}")
+    # utm_x, utm_y = latlon_to_utm(MCITY_LAT, MCITY_LON)
+    # print(f"MCITY GARAGE UTM X: {utm_x}, UTM Y: {utm_y}")
 
-    file_path = 'output/_vehicle_gps_fix.csv'
-    x, y = translate_data(file_path)
-    print(x)
-    print(y)
+    # file_path = 'output/_vehicle_gps_fix.csv'
+    # x, y = translate_gps_data(file_path)
+    # print(x)
+    # print(y)
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
 
-    num_frames = len(x)
-    ani = animation.FuncAnimation(fig, update, frames=num_frames, fargs=(x, y), interval=1, repeat=False)
-    plt.show()
+    # num_frames = len(x)
+    # ani = animation.FuncAnimation(fig, update, frames=num_frames, fargs=(x, y), interval=1, repeat=False)
+    # plt.show()
 
-    # plot_coordinates(x, y)
+    file_path1 = 'test1_gps.csv'
+    file_path2 = 'test1_novatel_utm_odom.csv'
+    translate_gps_heading_data(file_path1, file_path2)
 
 if __name__ == "__main__":
-    # This block gets executed when the script is run directly
     main()
 
 
